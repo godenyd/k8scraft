@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minecraft-server
+  labels:
+    app: minecraft-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: minecraft-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: minecraft-server
+    spec:
+      containers:
+        - name: minecraft
+          image: godenyd/minecraft:spigot-1.19.3
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 25565
+              protocol: TCP
+          #command: [ "/bin/bash" ]
+          #args: [ "-c", " while true; do echo 'asd'; sleep 1; done" ]
+          #args: [ "-jar", "/opt/minecraft/spigot-1.19.3.jar" ]
+          env:
+            - name: NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
+          volumeMounts:
+            - mountPath: /opt/minecraft
+              name: minecraft-root
+              subPathExpr: $(NAMESPACE)/minecraft
+      volumes:
+        - name: minecraft-root
+          hostPath: 
+            path: "/data_distributed/minecraft-servers"
+            type: DirectoryOrCreate
+
